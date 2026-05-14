@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phillipe Phillope</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200&display=swap');
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #6ed8ff; /* 采用你指定的蓝色 */
+            font-family: 'Inter', sans-serif;
+        }
+        canvas {
+            display: block;
+        }
+        .ui-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none; /* 确保点击穿透到 p5.js */
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 2rem;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="ui-layer">
+        <h1 class="text-white/80 text-sm tracking-[0.3em] font-light uppercase">
+            Phillipe Phillope
+        </h1>
+
+        <div class="text-center text-white/50 text-[10px] tracking-[0.2em] font-extralight uppercase">
+            © Phillipe Phillope 2026
+        </div>
+    </div>
+
+    <script>
+        let clouds = [];
+        let bird;
+
+        function setup() {
+            createCanvas(windowWidth, windowHeight);
+            // 初始化几朵云
+            clouds.push(new Cloud(windowWidth * 0.2, windowHeight * 0.6, 1.2));
+            clouds.push(new Cloud(windowWidth * 0.75, windowHeight * 0.25, 0.9));
+            clouds.push(new Cloud(windowWidth * 0.85, windowHeight * 0.8, 1.1));
+            bird = new Bird();
+            noStroke();
+        }
+
+        function draw() {
+            background('#6ed8ff');
+
+            // 绘制并更新云朵
+            for (let cloud of clouds) {
+                cloud.update();
+                cloud.display();
+            }
+
+            // 绘制红色小鸟（跟随鼠标）
+            bird.update();
+            bird.display();
+        }
+
+        class Cloud {
+            constructor(x, y, scale) {
+                this.baseX = x;
+                this.baseY = y;
+                this.x = x;
+                this.y = y;
+                this.scale = scale;
+                this.shake = 0;
+                // 预生成的 Low-poly 顶点（模拟参考图的 2-face 感）
+                this.points = [];
+                for(let i=0; i<15; i++) {
+                    this.points.push({
+                        dx: random(-80, 80) * scale,
+                        dy: random(-40, 40) * scale,
+                        c: random(240, 255) // 白色到浅灰的微差
+                    });
+                }
+            }
+
+            update() {
+                // 鼠标交互：靠近时抖动
+                let d = dist(mouseX, mouseY, this.x, this.y);
+                if (d < 150) {
+                    this.shake = map(d, 0, 150, 5, 0);
+                } else {
+                    this.shake *= 0.9;
+                }
+                this.x = this.baseX + random(-this.shake, this.shake);
+                this.y = this.baseY + random(-this.shake, this.shake);
+                
+                // 云朵缓慢漂浮
+                this.baseX += 0.2;
+                if (this.baseX > width + 100) this.baseX = -100;
+            }
+
+            display() {
+                push();
+                translate(this.x, this.y);
+                for (let p of this.points) {
+                    fill(p.c);
+                    // 绘制简单的三角形/多边形面
+                    beginShape();
+                    vertex(p.dx, p.dy);
+                    vertex(p.dx + 40 * this.scale, p.dy + 20 * this.scale);
+                    vertex(p.dx - 20 * this.scale, p.dy + 50 * this.scale);
+                    endShape(CLOSE);
+                }
+                pop();
+            }
+        }
+
+        class Bird {
+            constructor() {
+                this.x = mouseX;
+                this.y = mouseY;
+            }
+
+            update() {
+                // 平滑跟随鼠标
+                this.x = lerp(this.x, mouseX, 0.1);
+                this.y = lerp(this.y, mouseY, 0.1);
+            }
+
+            display() {
+                push();
+                translate(this.x, this.y);
+                fill('#ff4d4d'); // 纯色红色小鸟
+                // 极简 low-poly 小鸟轮廓 (2-3个面感)
+                beginShape();
+                vertex(0, 0);       // 头
+                vertex(-15, -10);   // 翅膀上
+                vertex(-10, 0);     // 身体中
+                vertex(-15, 10);    // 翅膀下
+                vertex(5, 2);       // 喙
+                endShape(CLOSE);
+                pop();
+            }
+        }
+
+        function windowResized() {
+            resizeCanvas(windowWidth, windowHeight);
+        }
+    </script>
+</body>
+</html>
